@@ -306,3 +306,7 @@ This project demonstrates an end-to-end healthcare analytics engineering workflo
 * documentation best practices
 
 The final dataset supports population health analytics, risk stratification, and engagement-focused healthcare analysis.
+
+## dbt Lineage
+
+![dbt Lineage](docs/lineage.png)
