@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: mart_population_health_risk
+    description: Member-level population health risk mart combining utilization, chronic condition burden, and engagement status.
+
+    columns:
+      - name: member_id
+        description: Unique member identifier.
+        tests:
+          - not_null
+          - unique
+
+      - name: population_risk_tier
+        description: Final risk tier derived from condition burden, inpatient utilization, and total paid amount.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Low', 'Medium', 'High']
+
+      - name: engagement_status
+        description: Member engagement classification based on successful outreach activity.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Engaged', 'Not Engaged']
