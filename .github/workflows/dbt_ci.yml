@@ -1,0 +1,56 @@
+name: dbt CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Rebuild DuckDB database from CSVs
+        run: |
+          python - <<'PY'
+          import duckdb
+
+          con = duckdb.connect("population_health.duckdb")
+
+          con.execute("CREATE OR REPLACE TABLE members AS SELECT * FROM read_csv_auto('data/raw/members.csv')")
+          con.execute("CREATE OR REPLACE TABLE conditions AS SELECT * FROM read_csv_auto('data/raw/conditions.csv')")
+          con.execute("CREATE OR REPLACE TABLE claims AS SELECT * FROM read_csv_auto('data/raw/claims.csv')")
+          con.execute("CREATE OR REPLACE TABLE interactions AS SELECT * FROM read_csv_auto('data/raw/interactions.csv')")
+
+          con.close()
+          PY
+
+      - name: Create dbt profile
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<'YAML'
+          population_health_risk_scoring_analytics_engineering:
+            outputs:
+              dev:
+                type: duckdb
+                path: ../population_health.duckdb
+                threads: 1
+            target: dev
+          YAML
+
+      - name: Run dbt build
+        working-directory: population_health_risk_scoring_analytics_engineering
+        run: dbt build
